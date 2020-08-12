@@ -1,8 +1,10 @@
 package com.mex.whytter.controller;
 
+import com.mex.whytter.domain.User;
 import com.mex.whytter.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +26,10 @@ public class MainController {
     }
 
     @GetMapping
-    public String main(Model model) {
+    public String main(Model model, @AuthenticationPrincipal User user) {
         HashMap<Object, Object> data = new HashMap<>();
 
+        data.put("profile", user);
         data.put("messages", messageRepository.findAll());
 
         model.addAttribute("frontendData", data);
