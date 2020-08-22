@@ -37,13 +37,29 @@
         },
         created() {
             addHandler(data => {
-                const index = this.messages.findIndex(item => item.id === data.body.id)
+                if (data.objectType === 'MESSAGE') {
+                    const index = this.messages.findIndex(item => item.id === data.body.id)
 
-                if (index > -1) {
-                    this.messages.splice(index, 1, data)
+                    switch (data.eventType) {
+                        case 'CREATE':
+                        case 'UPDATE':
+                            if (index > -1) {
+                                this.messages.splice(index, 1, data.body)
+                            } else {
+                                this.messages.push(data.body)
+                            }
+                            break
+                        case 'REMOVE':
+                            this.messages.splice(index, 1)
+                            break
+                        default:
+                            console.error(`Event type is unknown '${data.eventType}'`)
+                    }
+
                 } else {
-                    this.messages.push(data)
+                    console.error(`Object type is unknown '${data.objectType}'`)
                 }
+
             })
         }
     }
