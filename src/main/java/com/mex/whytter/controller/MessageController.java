@@ -2,6 +2,7 @@ package com.mex.whytter.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.mex.whytter.domain.Message;
+import com.mex.whytter.domain.User;
 import com.mex.whytter.domain.Views;
 import com.mex.whytter.dto.EventType;
 import com.mex.whytter.dto.ObjectType;
@@ -9,6 +10,7 @@ import com.mex.whytter.repository.MessageRepository;
 import com.mex.whytter.util.WebSocketSender;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -40,8 +42,9 @@ public class MessageController {
     }
 
     @PostMapping
-    public Message create(@RequestBody Message message) {
+    public Message create(@RequestBody Message message, @AuthenticationPrincipal User user) {
         message.setDateTime(LocalDateTime.now());
+        message.setAuthor(user);
         Message updatedMessage = messageRepository.save(message);
 
         webSocketSender.accept(EventType.CREATE, updatedMessage);

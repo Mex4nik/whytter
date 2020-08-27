@@ -10,6 +10,10 @@
                 <v-icon>delete</v-icon>
             </v-btn>
         </v-card-actions>
+        <comment-list
+            :comments="message.comments"
+            :message-id="message.id"
+        ></comment-list>
 
     </v-card>
 
@@ -17,8 +21,10 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import CommentList from '../comment/CommentList.vue'
 
     export default {
+        components: { CommentList },
         props: [ 'message', 'editMessage' ],
         methods: {
             ...mapActions(['removeMessageAction']),
