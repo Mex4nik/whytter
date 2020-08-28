@@ -4,35 +4,31 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.mex.whytter.domain.Message;
 import com.mex.whytter.domain.User;
 import com.mex.whytter.domain.Views;
-import com.mex.whytter.dto.EventType;
-import com.mex.whytter.dto.ObjectType;
-import com.mex.whytter.repository.MessageRepository;
-import com.mex.whytter.util.WebSocketSender;
-import org.springframework.beans.BeanUtils;
+import com.mex.whytter.dto.MessagePageDto;
+import com.mex.whytter.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.function.BiConsumer;
 
 @RestController
 @RequestMapping("message")
 public class MessageController {
-    private final MessageRepository messageRepository;
-    private final BiConsumer<EventType, Message> webSocketSender;
+    private final MessageService messageService;
+
+    public static final int MESSAGES_PER_PAGE = 3;
 
     @Autowired
-    public MessageController(MessageRepository messageRepository, WebSocketSender webSocketSender) {
-        this.messageRepository = messageRepository;
-        this.webSocketSender = webSocketSender.getSender(ObjectType.MESSAGE, Views.IdName.class);
+    public MessageController(MessageService messageService) {
+        this.messageService = messageService;
     }
 
     @GetMapping
-    @JsonView(Views.IdName.class)
-    public List<Message> list() {
-        return messageRepository.findAll();
+    @JsonView(Views.FullMessage.class)
+    public MessagePageDto list(@PageableDefault(size = MESSAGES_PER_PAGE, sort = { "id" }, direction = Sort.Direction.DESC) Pageable pageable) {
+        return messageService.findAll(pageable);
     }
 
     @GetMapping("{id}")
@@ -43,30 +39,21 @@ public class MessageController {
 
     @PostMapping
     public Message create(@RequestBody Message message, @AuthenticationPrincipal User user) {
-        message.setDateTime(LocalDateTime.now());
-        message.setAuthor(user);
-        Message updatedMessage = messageRepository.save(message);
-
-        webSocketSender.accept(EventType.CREATE, updatedMessage);
-
-        return updatedMessage;
+        return messageService.create(message, user);
     }
 
     @PutMapping("{id}")
-    public Message update(@PathVariable("id") Message messageDB, @RequestBody Message message) {
-        BeanUtils.copyProperties(message, messageDB, "id");
-
-        Message updatedMessage = messageRepository.save(messageDB);
-
-        webSocketSender.accept(EventType.UPDATE, updatedMessage);
-
-        return updatedMessage;
+    public Message update(
+            @PathVariable("id") Message messageDB,
+            @RequestBody Message message,
+            @AuthenticationPrincipal User user
+    ) {
+        return messageService.update(messageDB, message, user);
     }
 
     @DeleteMapping("{id}")
     public void delete(@PathVariable("id") Message message) {
-        messageRepository.delete(message);
-        webSocketSender.accept(EventType.REMOVE, message);
+        messageService.delete(message);
     }
 
 }

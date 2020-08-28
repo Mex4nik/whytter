@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.mex.whytter.domain.User;
 import com.mex.whytter.domain.Views;
-import com.mex.whytter.repository.MessageRepository;
+import com.mex.whytter.dto.MessagePageDto;
+import com.mex.whytter.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,20 +19,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.HashMap;
 
+import static com.mex.whytter.controller.MessageController.MESSAGES_PER_PAGE;
+
 @Controller
 @RequestMapping("/")
 public class MainController {
-    private final MessageRepository messageRepository;
-    private final ObjectWriter writter;
+    private final MessageService messageService;
+    private final ObjectWriter writer;
 
     @Value("${spring.profiles.active}")
     private String profile;
 
     @Autowired
-    public MainController(MessageRepository messageRepository, ObjectMapper mapper) {
-        this.messageRepository = messageRepository;
+    public MainController(MessageService messageService, ObjectMapper mapper) {
+        this.messageService = messageService;
 
-        this.writter = mapper
+        this.writer = mapper
                 .setConfig(mapper.getSerializationConfig())
                 .writerWithView(Views.FullMessage.class);
     }
@@ -41,8 +46,15 @@ public class MainController {
         if (user != null) {
             data.put("profile", user);
 
-            String messages = writter.writeValueAsString(messageRepository.findAll());
+            Sort sort = Sort.by(Sort.Direction.DESC, "id");
+            PageRequest pageRequest = PageRequest.of(0, MESSAGES_PER_PAGE, sort);
+            MessagePageDto messagePageDto = messageService.findAll(pageRequest);
+
+            String messages = writer.writeValueAsString(messagePageDto.getMessages());
+
             model.addAttribute("messages", messages);
+            data.put("currentPage", messagePageDto.getCurrentPage());
+            data.put("totalPages", messagePageDto.getTotalPages());
         } else {
             model.addAttribute("messages", "[]");
         }
