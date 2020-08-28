@@ -43,6 +43,8 @@ public class MainController {
 
             String messages = writter.writeValueAsString(messageRepository.findAll());
             model.addAttribute("messages", messages);
+        } else {
+            model.addAttribute("messages", "[]");
         }
 
         model.addAttribute("frontendData", data);

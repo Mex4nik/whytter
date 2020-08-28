@@ -1,8 +1,30 @@
 <template>
     <v-card class="my-2">
         <v-card-text primary-title>
-            ({{ message.id }})
-            {{ message.text }}
+            <div>
+                <v-avatar
+                        v-if="message.author && message.author.userpic"
+                        size="48px"
+                >
+                    <img
+                            :src="message.author.userpic"
+                            :alt="message.author.name"
+                    >
+                </v-avatar>
+
+                <v-avatar
+                        v-else
+                        size="48px"
+                        color="indigo"
+                >
+                    <v-icon dark>mdi-account-circle</v-icon>
+                </v-avatar>
+                <span class="pl-3">{{ authorName }}</span>
+            </div>
+            <div class="pt-3">
+                {{ message.text }}
+            </div>
+
         </v-card-text>
         <v-card-actions>
             <v-btn value="Edit" @click="edit" small text rounded>Edit</v-btn>
@@ -24,8 +46,13 @@
     import CommentList from '../comment/CommentList.vue'
 
     export default {
-        components: { CommentList },
         props: [ 'message', 'editMessage' ],
+        components: { CommentList },
+        computed: {
+            authorName() {
+                return this.message.author ? this.message.author.name : 'unknown'
+            }
+        },
         methods: {
             ...mapActions(['removeMessageAction']),
             edit() {
