@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.mex.whytter.domain.User;
 import com.mex.whytter.domain.Views;
 import com.mex.whytter.dto.MessagePageDto;
+import com.mex.whytter.repository.UserRepository;
 import com.mex.whytter.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,18 +26,27 @@ import static com.mex.whytter.controller.MessageController.MESSAGES_PER_PAGE;
 @RequestMapping("/")
 public class MainController {
     private final MessageService messageService;
-    private final ObjectWriter writer;
+    private final UserRepository userRepository;
+
+    private final ObjectWriter messageWriter;
+    private final ObjectWriter profileWriter;
 
     @Value("${spring.profiles.active}")
     private String profile;
 
     @Autowired
-    public MainController(MessageService messageService, ObjectMapper mapper) {
+    public MainController(MessageService messageService, UserRepository userRepository, ObjectMapper mapper) {
         this.messageService = messageService;
+        this.userRepository = userRepository;
 
-        this.writer = mapper
-                .setConfig(mapper.getSerializationConfig())
+        ObjectMapper objectMapper = mapper
+                .setConfig(mapper.getSerializationConfig());
+
+        this.messageWriter = objectMapper
                 .writerWithView(Views.FullMessage.class);
+
+        this.profileWriter = objectMapper
+                .writerWithView(Views.FullProfile.class);
     }
 
     @GetMapping
@@ -44,19 +54,22 @@ public class MainController {
         HashMap<Object, Object> data = new HashMap<>();
 
         if (user != null) {
-            data.put("profile", user);
+            User userDb = userRepository.findById(user.getId()).get();
+            String serializedProfile = profileWriter.writeValueAsString(userDb);
+            model.addAttribute("profile", serializedProfile);
 
             Sort sort = Sort.by(Sort.Direction.DESC, "id");
             PageRequest pageRequest = PageRequest.of(0, MESSAGES_PER_PAGE, sort);
-            MessagePageDto messagePageDto = messageService.findAll(pageRequest);
+            MessagePageDto messagePageDto = messageService.findForUser(pageRequest, user);
 
-            String messages = writer.writeValueAsString(messagePageDto.getMessages());
+            String messages = messageWriter.writeValueAsString(messagePageDto.getMessages());
 
             model.addAttribute("messages", messages);
             data.put("currentPage", messagePageDto.getCurrentPage());
             data.put("totalPages", messagePageDto.getTotalPages());
         } else {
             model.addAttribute("messages", "[]");
+            model.addAttribute("profile", "null");
         }
 
         model.addAttribute("frontendData", data);
