@@ -21,7 +21,7 @@
         data() {
             return {
                 text: '',
-                id: ''
+                id: null
             }
         },
         watch: {
@@ -43,7 +43,7 @@
                 }
 
                 this.text = ''
-                this.id = ''
+                this.id = null
             }
         }
     }

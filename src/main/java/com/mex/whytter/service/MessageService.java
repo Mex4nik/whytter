@@ -10,7 +10,6 @@ import com.mex.whytter.dto.ObjectType;
 import com.mex.whytter.repository.MessageRepository;
 import com.mex.whytter.repository.UserSubscriptionRepository;
 import com.mex.whytter.util.WebSocketSender;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +34,7 @@ public class MessageService {
     ) {
         this.messageRepository = messageRepository;
         this.userSubscriptionRepository = userSubscriptionRepository;
-        this.webSocketSender = webSocketSender.getSender(ObjectType.MESSAGE, Views.IdName.class);
+        this.webSocketSender = webSocketSender.getSender(ObjectType.MESSAGE, Views.FullMessage.class);
     }
 
     public MessagePageDto findForUser(Pageable pageable, User user) {
@@ -65,7 +64,7 @@ public class MessageService {
     }
 
     public Message update(Message messageDB, Message message, User user) {
-        BeanUtils.copyProperties(message, messageDB, "id");
+        messageDB.setText(message.getText());
 
         messageDB.setAuthor(user);
         Message updatedMessage = messageRepository.save(messageDB);
