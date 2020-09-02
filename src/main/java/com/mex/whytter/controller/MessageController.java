@@ -13,6 +13,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("message")
 public class MessageController {
@@ -42,7 +44,7 @@ public class MessageController {
 
     @PostMapping
     @JsonView(Views.FullMessage.class)
-    public Message create(@RequestBody Message message, @AuthenticationPrincipal User user) {
+    public Message create(@RequestBody Message message, @AuthenticationPrincipal User user) throws IOException {
         return messageService.create(message, user);
     }
 
@@ -52,7 +54,7 @@ public class MessageController {
             @PathVariable("id") Message messageDB,
             @RequestBody Message message,
             @AuthenticationPrincipal User user
-    ) {
+    ) throws IOException {
         return messageService.update(messageDB, message, user);
     }
 

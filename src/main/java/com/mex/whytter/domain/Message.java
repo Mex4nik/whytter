@@ -37,4 +37,17 @@ public class Message {
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
     @JsonView(Views.FullMessage.class)
     private List<Comment> comments;
+
+    @JsonView(Views.FullMessage.class)
+    public String link;
+
+    @JsonView(Views.FullMessage.class)
+    public String linkTitle;
+
+    @JsonView(Views.FullMessage.class)
+    public String linkDescription;
+
+    @JsonView(Views.FullMessage.class)
+    public String linkCover;
+
 }

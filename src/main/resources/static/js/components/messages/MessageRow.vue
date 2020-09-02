@@ -11,6 +11,9 @@
             </div>
 
         </v-card-text>
+
+        <media v-if="message.link" :message="message"></media>
+
         <v-card-actions>
             <v-btn value="Edit" @click="edit" small text rounded>Edit</v-btn>
             <v-btn icon @click="del" small>
@@ -30,10 +33,11 @@
     import { mapActions } from 'vuex'
     import CommentList from '../comment/CommentList.vue'
     import UserLink from 'components/UserLink.vue'
+    import Media from 'components/media/Media.vue'
 
     export default {
         props: [ 'message', 'editMessage' ],
-        components: { UserLink, CommentList },
+        components: { UserLink, CommentList, Media },
         methods: {
             ...mapActions(['removeMessageAction']),
             edit() {
